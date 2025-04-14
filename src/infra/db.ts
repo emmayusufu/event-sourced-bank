@@ -1,0 +1,27 @@
+import pg from 'pg';
+
+export type Tx = pg.PoolClient;
+
+let pool: pg.Pool | null = null;
+
+export function getPool(): pg.Pool {
+  if (!pool) {
+    pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+  }
+  return pool;
+}
+
+export async function withTx<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
+  const client = await getPool().connect();
+  try {
+    await client.query('BEGIN');
+    const result = await fn(client);
+    await client.query('COMMIT');
+    return result;
+  } catch (err) {
+    await client.query('ROLLBACK');
+    throw err;
+  } finally {
+    client.release();
+  }
+}
