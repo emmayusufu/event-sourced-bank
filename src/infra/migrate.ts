@@ -32,7 +32,7 @@ export async function runMigrations(dir = 'migrations') {
       await client.query('COMMIT');
       console.log(`migrated: ${file}`);
     } catch (err) {
-      await client.query('ROLLBACK');
+      try { await client.query('ROLLBACK'); } catch { /* preserve original error */ }
       throw err;
     } finally {
       client.release();
