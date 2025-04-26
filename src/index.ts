@@ -2,10 +2,12 @@ import 'dotenv/config';
 import { getPool } from './infra/db.js';
 import { runMigrations } from './infra/migrate.js';
 import { buildApp } from './http/server.js';
+import { startProjector, stopProjector } from './projector/loop.js';
 
 async function main() {
   console.log('event-sourced-bank: boot');
   await runMigrations();
+  startProjector();
 
   const port = Number(process.env.PORT ?? 3000);
   const app = buildApp();
@@ -14,6 +16,7 @@ async function main() {
   const shutdown = async (signal: string) => {
     console.log(`received ${signal}, exiting`);
     server.close();
+    await stopProjector();
     await getPool().end();
     process.exit(0);
   };
