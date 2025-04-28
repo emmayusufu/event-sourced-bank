@@ -18,6 +18,11 @@ export async function transactionProjector(tx: Tx, event: StoredEvent): Promise<
   let related: string | null = null;
 
   switch (event.type) {
+    case 'AccountOpened':
+      if (!p.initialDeposit) return;
+      type = 'deposit';
+      amount = p.initialDeposit;
+      break;
     case 'MoneyDeposited':
       type = meta.transferId ? 'transfer-in' : 'deposit';
       amount = p.amount;
