@@ -7,7 +7,8 @@ import {
   handleOpenAccount,
   handleWithdraw,
 } from '../../write/account/handlers.js';
-import { ValidationError } from '../../shared/errors.js';
+import { ValidationError, NotFoundError } from '../../shared/errors.js';
+import { getAccount, getTransactions, listOpenAccounts } from '../../read/queries.js';
 
 const openSchema = z.object({
   owner: z.string().min(1),
@@ -78,5 +79,25 @@ accountsRouter.post('/accounts/:id/close', async (req, res, next) => {
       expectedVersion: body.expectedVersion,
     });
     res.json({ version: result.version });
+  } catch (err) { next(err); }
+});
+
+accountsRouter.get('/accounts', async (_req, res, next) => {
+  try {
+    res.json(await listOpenAccounts());
+  } catch (err) { next(err); }
+});
+
+accountsRouter.get('/accounts/:id', async (req, res, next) => {
+  try {
+    const a = await getAccount(req.params.id);
+    if (!a) throw new NotFoundError(`account ${req.params.id} not found`);
+    res.json(a);
+  } catch (err) { next(err); }
+});
+
+accountsRouter.get('/accounts/:id/transactions', async (req, res, next) => {
+  try {
+    res.json(await getTransactions(req.params.id));
   } catch (err) { next(err); }
 });
