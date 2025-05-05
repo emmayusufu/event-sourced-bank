@@ -2,10 +2,11 @@ import { getPool, withTx, type Tx } from '../infra/db.js';
 import { readAfter, type StoredEvent } from '../infra/eventStore.js';
 import { accountProjector } from '../read/projectors/account.js';
 import { transactionProjector } from '../read/projectors/transaction.js';
+import { transferProcessManager } from '../process/transfer.js';
 
 export type Handler = (tx: Tx, event: StoredEvent) => Promise<void>;
 
-const handlers: Handler[] = [accountProjector, transactionProjector];
+const handlers: Handler[] = [accountProjector, transactionProjector, transferProcessManager];
 
 async function getCheckpoint(tx: Tx): Promise<number> {
   const { rows } = await tx.query(
