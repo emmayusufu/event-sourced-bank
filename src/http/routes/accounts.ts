@@ -9,6 +9,7 @@ import {
 } from '../../write/account/handlers.js';
 import { ValidationError, NotFoundError } from '../../shared/errors.js';
 import { getAccount, getTransactions, listOpenAccounts } from '../../read/queries.js';
+import { waitForCheckpoint } from '../../projector/loop.js';
 
 const openSchema = z.object({
   owner: z.string().min(1),
@@ -40,6 +41,7 @@ accountsRouter.post('/accounts', async (req, res, next) => {
       owner: body.owner,
       initialDeposit: body.initialDeposit,
     });
+    if (req.query.wait === 'true') await waitForCheckpoint(result.globalSeq);
     res.status(201).json({ accountId, version: result.version });
   } catch (err) { next(err); }
 });
@@ -53,6 +55,7 @@ accountsRouter.post('/accounts/:id/deposits', async (req, res, next) => {
       amount: body.amount,
       expectedVersion: body.expectedVersion,
     });
+    if (req.query.wait === 'true') await waitForCheckpoint(result.globalSeq);
     res.json({ version: result.version });
   } catch (err) { next(err); }
 });
@@ -66,6 +69,7 @@ accountsRouter.post('/accounts/:id/withdrawals', async (req, res, next) => {
       amount: body.amount,
       expectedVersion: body.expectedVersion,
     });
+    if (req.query.wait === 'true') await waitForCheckpoint(result.globalSeq);
     res.json({ version: result.version });
   } catch (err) { next(err); }
 });
@@ -78,6 +82,7 @@ accountsRouter.post('/accounts/:id/close', async (req, res, next) => {
       accountId: req.params.id,
       expectedVersion: body.expectedVersion,
     });
+    if (req.query.wait === 'true') await waitForCheckpoint(result.globalSeq);
     res.json({ version: result.version });
   } catch (err) { next(err); }
 });

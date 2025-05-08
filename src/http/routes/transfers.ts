@@ -6,6 +6,7 @@ import { readStream } from '../../infra/eventStore.js';
 import { rehydrateTransfer } from '../../write/transfer/state.js';
 import { transferStreamId } from '../../write/transfer/events.js';
 import { NotFoundError, ValidationError } from '../../shared/errors.js';
+import { waitForCheckpoint } from '../../projector/loop.js';
 
 const requestSchema = z.object({
   fromId: z.string().min(1),
@@ -27,7 +28,8 @@ transfersRouter.post('/transfers', async (req, res, next) => {
       toId: r.data.toId,
       amount: r.data.amount,
     });
-    res.status(202).json(result);
+    if (req.query.wait === 'true') await waitForCheckpoint(result.globalSeq);
+    res.status(202).json({ transferId: result.transferId, status: result.status });
   } catch (err) { next(err); }
 });
 

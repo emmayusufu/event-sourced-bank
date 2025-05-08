@@ -7,7 +7,7 @@ export async function handleRequestTransfer(cmd: RequestTransferCommand) {
   if (cmd.amount <= 0) throw new ValidationError('amount must be > 0');
   if (cmd.fromId === cmd.toId) throw new ValidationError('cannot transfer to same account');
 
-  await appendToStream(transferStreamId(cmd.transferId), 0, [{
+  const r = await appendToStream(transferStreamId(cmd.transferId), 0, [{
     type: 'TransferRequested',
     payload: {
       transferId: cmd.transferId,
@@ -16,5 +16,5 @@ export async function handleRequestTransfer(cmd: RequestTransferCommand) {
       amount: cmd.amount,
     },
   }]);
-  return { transferId: cmd.transferId, status: 'requested' };
+  return { transferId: cmd.transferId, status: 'requested', globalSeq: r.globalSeq };
 }
