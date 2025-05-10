@@ -28,6 +28,9 @@ export async function transferProcessManager(_tx: Tx, event: StoredEvent): Promi
   switch (event.type) {
     case 'TransferRequested': {
       const { transferId, fromId, toId, amount } = p;
+      const transferEvents = await readStream(transferStreamId(transferId));
+      const transfer = rehydrateTransfer(transferEvents);
+      if (transfer && transfer.status !== 'requested') return;
       try {
         const version = await currentAccountVersion(fromId);
         await handleWithdraw({
