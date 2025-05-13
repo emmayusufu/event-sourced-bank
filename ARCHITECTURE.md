@@ -1,4 +1,4 @@
-# CQRS + Event Sourcing Bank Demo — Design
+# CQRS + Event Sourcing Bank: Design
 
 ## Goal
 
@@ -200,7 +200,7 @@ rules, appends new events.
 2. rehydrate state
 3. validate state + command (404 / 422)
 4. produce new events
-5. appendToStream(streamId, expectedVersion, events) — concurrency check here
+5. appendToStream(streamId, expectedVersion, events): concurrency check here
 ```
 
 ### Business rules
@@ -374,7 +374,7 @@ demos and as a documented production work-around. Default is no wait.
 ## Project layout
 
 ```
-cqrs-bank-demo/
+event-sourced-bank/
   docker-compose.yml
   package.json
   tsconfig.json

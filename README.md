@@ -53,3 +53,10 @@ Inspect the raw event log:
 | GET    | /admin/events?stream=...&after=...  | raw event log            |
 
 Append `?wait=true` to any mutation to block until the projection has caught up.
+
+## Notes
+
+The events table is the source of truth. Projections are derived: drop them and
+the polling projector rebuilds them from the log on the next tick. The transfer
+saga is an orchestrated process manager riding the same loop. Longer write-up in
+[ARCHITECTURE.md](ARCHITECTURE.md).
