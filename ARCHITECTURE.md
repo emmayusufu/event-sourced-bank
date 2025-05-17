@@ -18,6 +18,7 @@ In:
 - One polling projector running in-process.
 - One orchestrated saga (transfer) with compensation on failure.
 - HTTP API, JSON, no auth.
+- Idempotency keys on all POSTs.
 - Admin endpoints to inspect the event log and rebuild projections from scratch.
 
 Out:
@@ -359,6 +360,19 @@ single error middleware:
 | ConcurrencyError  | 409    |
 | BusinessRuleError | 422    |
 | (anything else)   | 500    |
+
+### Idempotency
+
+Any POST may carry an `Idempotency-Key` header. The middleware claims the key
+in `idempotency_keys` (PK on `(key, route)`) before invoking the handler,
+records the response on `finish`, and replays the stored response on a second
+request that hashes to the same body. A different body under the same key is
+rejected with 400. A request with the key still in flight gets 409.
+Server-error responses are not stored, so a failed request can be retried
+with the same key after the underlying bug is fixed.
+
+Keys are scoped per route, replays are deterministic and include the original
+status code, and the table is the only shared state.
 
 ### Eventual consistency, surfaced
 

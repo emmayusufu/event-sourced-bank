@@ -36,6 +36,15 @@ Inspect the raw event log:
 
     curl -s "localhost:3000/admin/events?stream=account-$A" | jq
 
+Retry a mutation safely with an idempotency key. The second call returns
+the same response and a header marking it as a replay:
+
+    K=$(uuidgen)
+    curl -s -XPOST localhost:3000/accounts -H 'content-type: application/json' \
+      -H "Idempotency-Key: $K" -d '{"owner":"Carol","initialDeposit":500}'
+    curl -si -XPOST localhost:3000/accounts -H 'content-type: application/json' \
+      -H "Idempotency-Key: $K" -d '{"owner":"Carol","initialDeposit":500}' | head -20
+
 ## Endpoints
 
 | Method | Path                                | Purpose                  |
@@ -53,6 +62,7 @@ Inspect the raw event log:
 | GET    | /admin/events?stream=...&after=...  | raw event log            |
 
 Append `?wait=true` to any mutation to block until the projection has caught up.
+Send `Idempotency-Key: <uuid>` on any POST to make it safe to retry.
 
 ## Notes
 
