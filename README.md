@@ -36,6 +36,12 @@ Inspect the raw event log:
 
     curl -s "localhost:3000/admin/events?stream=account-$A" | jq
 
+Inspect the double-entry ledger and prove the books balance:
+
+    curl -s localhost:3000/accounts/$A/ledger | jq
+    curl -s localhost:3000/admin/ledger/trial-balance | jq
+    curl -s localhost:3000/admin/ledger/invariants | jq
+
 Retry a mutation safely with an idempotency key. The second call returns
 the same response and a header marking it as a replay:
 
@@ -58,8 +64,11 @@ the same response and a header marking it as a replay:
 | GET    | /accounts/:id                       | one account              |
 | GET    | /accounts/:id/transactions          | account history          |
 | GET    | /transfers/:id                      | transfer status          |
+| GET    | /accounts/:id/ledger                | double-entry ledger      |
 | POST   | /admin/rebuild-projections          | wipe and replay          |
 | GET    | /admin/events?stream=...&after=...  | raw event log            |
+| GET    | /admin/ledger/trial-balance         | debits/credits per acct  |
+| GET    | /admin/ledger/invariants            | books-balance health     |
 
 Append `?wait=true` to any mutation to block until the projection has caught up.
 Send `Idempotency-Key: <uuid>` on any POST to make it safe to retry.
@@ -68,5 +77,9 @@ Send `Idempotency-Key: <uuid>` on any POST to make it safe to retry.
 
 The events table is the source of truth. Projections are derived: drop them and
 the polling projector rebuilds them from the log on the next tick. The transfer
-saga is an orchestrated process manager riding the same loop. Longer write-up in
-[ARCHITECTURE.md](ARCHITECTURE.md).
+saga is an orchestrated process manager riding the same loop. The ledger is a
+second projection over the same events, with `cash:in` / `cash:out` /
+`transfer-suspense` system accounts as the counterparties for external flows
+and in-flight transfers. Every entry group sums to zero, every transfer leaves
+the suspense account at zero, and `/admin/ledger/invariants` proves it. Longer
+write-up in [ARCHITECTURE.md](ARCHITECTURE.md).

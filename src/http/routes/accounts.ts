@@ -8,7 +8,7 @@ import {
   handleWithdraw,
 } from '../../write/account/handlers.js';
 import { ValidationError, NotFoundError } from '../../shared/errors.js';
-import { getAccount, getTransactions, listOpenAccounts } from '../../read/queries.js';
+import { getAccount, getLedger, getTransactions, listOpenAccounts } from '../../read/queries.js';
 import { waitForCheckpoint } from '../../projector/loop.js';
 
 const openSchema = z.object({
@@ -43,7 +43,9 @@ accountsRouter.post('/accounts', async (req, res, next) => {
     });
     if (req.query.wait === 'true') await waitForCheckpoint(result.globalSeq);
     res.status(201).json({ accountId, version: result.version });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 accountsRouter.post('/accounts/:id/deposits', async (req, res, next) => {
@@ -57,7 +59,9 @@ accountsRouter.post('/accounts/:id/deposits', async (req, res, next) => {
     });
     if (req.query.wait === 'true') await waitForCheckpoint(result.globalSeq);
     res.json({ version: result.version });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 accountsRouter.post('/accounts/:id/withdrawals', async (req, res, next) => {
@@ -71,7 +75,9 @@ accountsRouter.post('/accounts/:id/withdrawals', async (req, res, next) => {
     });
     if (req.query.wait === 'true') await waitForCheckpoint(result.globalSeq);
     res.json({ version: result.version });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 accountsRouter.post('/accounts/:id/close', async (req, res, next) => {
@@ -84,13 +90,17 @@ accountsRouter.post('/accounts/:id/close', async (req, res, next) => {
     });
     if (req.query.wait === 'true') await waitForCheckpoint(result.globalSeq);
     res.json({ version: result.version });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 accountsRouter.get('/accounts', async (_req, res, next) => {
   try {
     res.json(await listOpenAccounts());
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 accountsRouter.get('/accounts/:id', async (req, res, next) => {
@@ -98,11 +108,23 @@ accountsRouter.get('/accounts/:id', async (req, res, next) => {
     const a = await getAccount(req.params.id);
     if (!a) throw new NotFoundError(`account ${req.params.id} not found`);
     res.json(a);
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 accountsRouter.get('/accounts/:id/transactions', async (req, res, next) => {
   try {
     res.json(await getTransactions(req.params.id));
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
+});
+
+accountsRouter.get('/accounts/:id/ledger', async (req, res, next) => {
+  try {
+    res.json(await getLedger(req.params.id));
+  } catch (err) {
+    next(err);
+  }
 });

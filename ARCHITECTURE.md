@@ -14,12 +14,14 @@ In:
 - One bounded context, one Postgres database.
 - Two aggregates: `Account`, `Transfer`.
 - Four account commands, one transfer command, four queries.
-- Two read-model projections (`account_projection`, `transaction_projection`).
+- Three read-model projections (`account_projection`, `transaction_projection`,
+  `ledger_entries`).
 - One polling projector running in-process.
 - One orchestrated saga (transfer) with compensation on failure.
 - HTTP API, JSON, no auth.
 - Idempotency keys on all POSTs.
-- Admin endpoints to inspect the event log and rebuild projections from scratch.
+- Admin endpoints to inspect the event log, rebuild projections, run the trial
+  balance, and check books-balance invariants.
 
 Out:
 
@@ -106,6 +108,39 @@ CREATE TABLE account_projection (
 
 Money is stored in cents. `version` is copied from the event being projected
 so clients can compare write-side and read-side versions to detect lag.
+
+### `ledger_entries`
+
+```sql
+CREATE TABLE ledger_entries (
+  id            BIGSERIAL    PRIMARY KEY,
+  entry_group   TEXT         NOT NULL,
+  account_id    TEXT         NOT NULL,
+  direction     TEXT         NOT NULL CHECK (direction IN ('debit','credit')),
+  amount        BIGINT       NOT NULL CHECK (amount > 0),
+  occurred_at   TIMESTAMPTZ  NOT NULL,
+  event_seq     BIGINT       NOT NULL,
+  UNIQUE (event_seq, account_id, direction)
+);
+```
+
+A double-entry view over the same events. Each money movement writes exactly
+two rows in one `entry_group` whose signed amounts sum to zero. External flows
+use system accounts as the counterparty:
+
+- `system:cash-in` is debited when money enters the bank: deposits and
+  opening deposits.
+- `system:cash-out` is credited when money leaves the bank: withdrawals.
+- `system:transfer-suspense` holds money in flight inside a transfer saga.
+
+The suspense account holds money between the saga's debit and credit legs.
+After a successful transfer, both legs net to zero in suspense. After a
+refunded failure, the original debit and the refund deposit also net to zero.
+Suspense is always at zero between transfers. That's the invariant.
+
+The unique key `(event_seq, account_id, direction)` is the projection's
+idempotency primitive: replaying any event is safe; the second insert is a
+no-op.
 
 ### `transaction_projection`
 
@@ -249,14 +284,30 @@ A POST to `/admin/rebuild-projections`:
 
 ```sql
 BEGIN;
-  DELETE FROM account_projection;
+  DELETE FROM ledger_entries;
   DELETE FROM transaction_projection;
+  DELETE FROM account_projection;
   UPDATE projector_checkpoint SET last_seq = 0 WHERE name = 'main';
 COMMIT;
 ```
 
 Next tick replays every event. The endpoint returns once the projector has
 caught up to the new tail.
+
+### Books-balance invariants
+
+`/admin/ledger/invariants` runs three checks on the ledger:
+
+1. **Global net**: sum of credits minus sum of debits across the whole table
+   must be zero. If non-zero, money was created or destroyed.
+2. **Per-group net**: each `entry_group` must sum to zero. If any group is
+   imbalanced, a projection wrote half a pair.
+3. **Reconciliation**: for each customer account, the ledger-derived balance
+   (credits minus debits) must match `account_projection.balance`. Drift
+   means the two projections disagree about the same events.
+
+The endpoint returns 200 when healthy and 500 with the offending rows when
+not, so it can be wired to a monitor without parsing.
 
 ## Read side
 
