@@ -42,6 +42,12 @@ Inspect the double-entry ledger and prove the books balance:
     curl -s localhost:3000/admin/ledger/trial-balance | jq
     curl -s localhost:3000/admin/ledger/invariants | jq
 
+Run the reconciliation checks. 200 if healthy, 500 with the offending rows if
+not:
+
+    curl -s "localhost:3000/admin/reconciliation/stuck-transfers?olderThan=300" | jq
+    curl -s localhost:3000/admin/reconciliation/replay-check | jq
+
 Retry a mutation safely with an idempotency key. The second call returns
 the same response and a header marking it as a replay:
 
@@ -69,6 +75,8 @@ the same response and a header marking it as a replay:
 | GET    | /admin/events?stream=...&after=...  | raw event log            |
 | GET    | /admin/ledger/trial-balance         | debits/credits per acct  |
 | GET    | /admin/ledger/invariants            | books-balance health     |
+| GET    | /admin/reconciliation/stuck-transfers | sagas stuck past olderThan seconds |
+| GET    | /admin/reconciliation/replay-check  | projection vs replay-from-events |
 
 Append `?wait=true` to any mutation to block until the projection has caught up.
 Send `Idempotency-Key: <uuid>` on any POST to make it safe to retry.

@@ -3,6 +3,8 @@ import { withTx, getPool } from '../../infra/db.js';
 import { readAfter } from '../../infra/eventStore.js';
 import { tipSeq, waitForCheckpoint } from '../../projector/loop.js';
 import { checkInvariants, trialBalance } from '../../read/queries.js';
+import { findStuckTransfers, replayCheck } from '../../read/reconciliation.js';
+import { ValidationError } from '../../shared/errors.js';
 
 export const adminRouter = Router();
 
@@ -50,5 +52,28 @@ adminRouter.get('/admin/ledger/invariants', async (_req, res, next) => {
 adminRouter.get('/admin/ledger/trial-balance', async (_req, res, next) => {
   try {
     res.json(await trialBalance());
+  } catch (err) { next(err); }
+});
+
+adminRouter.get('/admin/reconciliation/stuck-transfers', async (req, res, next) => {
+  try {
+    const raw = req.query.olderThan ?? '300';
+    const olderThan = Number(raw);
+    if (!Number.isFinite(olderThan) || olderThan < 0) {
+      throw new ValidationError('olderThan must be a non-negative number of seconds');
+    }
+    const stuck = await findStuckTransfers(olderThan);
+    res.status(stuck.length === 0 ? 200 : 500).json({
+      healthy: stuck.length === 0,
+      thresholdSeconds: olderThan,
+      stuck,
+    });
+  } catch (err) { next(err); }
+});
+
+adminRouter.get('/admin/reconciliation/replay-check', async (_req, res, next) => {
+  try {
+    const r = await replayCheck();
+    res.status(r.healthy ? 200 : 500).json(r);
   } catch (err) { next(err); }
 });
