@@ -9,6 +9,10 @@ Bank account service backed by a Postgres event store, with CQRS read projection
     npm install
     npm run dev
 
+Run the tests:
+
+    npm test
+
 ## Tour
 
 Open two accounts:
