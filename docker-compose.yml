@@ -6,7 +6,7 @@ services:
       POSTGRES_PASSWORD: bank
       POSTGRES_DB: bank
     ports:
-      - "5432:5432"
+      - '5432:5432'
     volumes:
       - bank-pg:/var/lib/postgresql/data
 

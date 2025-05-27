@@ -19,10 +19,6 @@ export type AccountClosed = {
   accountId: string;
 };
 
-export type AccountEvent =
-  | AccountOpened
-  | MoneyDeposited
-  | MoneyWithdrawn
-  | AccountClosed;
+export type AccountEvent = AccountOpened | MoneyDeposited | MoneyWithdrawn | AccountClosed;
 
 export const accountStreamId = (id: string) => `account-${id}`;

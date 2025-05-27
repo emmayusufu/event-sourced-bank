@@ -11,10 +11,7 @@ export type AccountState = {
   closedAt: Date | null;
 };
 
-export function applyAccountEvent(
-  state: AccountState | null,
-  stored: StoredEvent,
-): AccountState {
+export function applyAccountEvent(state: AccountState | null, stored: StoredEvent): AccountState {
   const e = { ...stored.payload, type: stored.type } as unknown as AccountEvent;
   switch (e.type) {
     case 'AccountOpened':
@@ -40,8 +37,5 @@ export function applyAccountEvent(
 }
 
 export function rehydrateAccount(events: StoredEvent[]): AccountState | null {
-  return events.reduce<AccountState | null>(
-    (s, e) => applyAccountEvent(s, e),
-    null,
-  );
+  return events.reduce<AccountState | null>((s, e) => applyAccountEvent(s, e), null);
 }

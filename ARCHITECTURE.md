@@ -202,11 +202,22 @@ transfer flow during projection.
 ### Command shapes
 
 ```ts
-type OpenAccount    = { type: 'OpenAccount';    accountId: string; owner: string; initialDeposit: number };
-type Deposit        = { type: 'Deposit';        accountId: string; amount: number; expectedVersion: number };
-type Withdraw       = { type: 'Withdraw';       accountId: string; amount: number; expectedVersion: number };
-type CloseAccount   = { type: 'CloseAccount';   accountId: string; expectedVersion: number };
-type RequestTransfer= { type: 'RequestTransfer';transferId: string; fromId: string; toId: string; amount: number };
+type OpenAccount = {
+  type: 'OpenAccount';
+  accountId: string;
+  owner: string;
+  initialDeposit: number;
+};
+type Deposit = { type: 'Deposit'; accountId: string; amount: number; expectedVersion: number };
+type Withdraw = { type: 'Withdraw'; accountId: string; amount: number; expectedVersion: number };
+type CloseAccount = { type: 'CloseAccount'; accountId: string; expectedVersion: number };
+type RequestTransfer = {
+  type: 'RequestTransfer';
+  transferId: string;
+  fromId: string;
+  toId: string;
+  amount: number;
+};
 ```
 
 `expectedVersion` is required on mutations of an existing aggregate. Open and
@@ -218,12 +229,15 @@ Pure data + pure functions:
 
 ```ts
 type AccountState = {
-  id: string; owner: string; balance: number;
-  status: 'open' | 'closed'; version: number;
+  id: string;
+  owner: string;
+  balance: number;
+  status: 'open' | 'closed';
+  version: number;
 };
 
-function applyAccountEvent(s: AccountState | null, e: Event): AccountState
-function rehydrateAccount(events: Event[]): AccountState | null
+function applyAccountEvent(s: AccountState | null, e: Event): AccountState;
+function rehydrateAccount(events: Event[]): AccountState | null;
 ```
 
 No I/O, no DB. The handler reads the stream, calls `rehydrateAccount`, runs
@@ -405,7 +419,7 @@ Request bodies validated with `zod`. Errors mapped to status codes by a
 single error middleware:
 
 | Error class       | Status |
-|-------------------|--------|
+| ----------------- | ------ |
 | ValidationError   | 400    |
 | NotFoundError     | 404    |
 | ConcurrencyError  | 409    |

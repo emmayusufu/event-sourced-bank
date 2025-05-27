@@ -2,10 +2,9 @@ import type { StoredEvent } from '../../infra/eventStore.js';
 import type { Tx } from '../../infra/db.js';
 
 async function getCurrentBalance(tx: Tx, accountId: string): Promise<number> {
-  const { rows } = await tx.query(
-    `SELECT balance FROM account_projection WHERE account_id = $1`,
-    [accountId],
-  );
+  const { rows } = await tx.query(`SELECT balance FROM account_projection WHERE account_id = $1`, [
+    accountId,
+  ]);
   return Number(rows[0]?.balance ?? 0);
 }
 

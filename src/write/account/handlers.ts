@@ -19,15 +19,17 @@ export async function handleOpenAccount(cmd: OpenAccountCommand): Promise<Comman
   const existing = await readStream(stream);
   if (existing.length > 0) throw new BusinessRuleError('account already exists');
 
-  return appendToStream(stream, 0, [{
-    type: 'AccountOpened',
-    payload: {
-      accountId: cmd.accountId,
-      owner: cmd.owner,
-      initialDeposit: cmd.initialDeposit,
+  return appendToStream(stream, 0, [
+    {
+      type: 'AccountOpened',
+      payload: {
+        accountId: cmd.accountId,
+        owner: cmd.owner,
+        initialDeposit: cmd.initialDeposit,
+      },
+      metadata: cmd.metadata,
     },
-    metadata: cmd.metadata,
-  }]);
+  ]);
 }
 
 export async function handleDeposit(cmd: DepositCommand): Promise<CommandResult> {
@@ -39,11 +41,13 @@ export async function handleDeposit(cmd: DepositCommand): Promise<CommandResult>
   if (!state) throw new NotFoundError(`account ${cmd.accountId} not found`);
   if (state.status === 'closed') throw new BusinessRuleError('account closed');
 
-  return appendToStream(stream, cmd.expectedVersion, [{
-    type: 'MoneyDeposited',
-    payload: { accountId: cmd.accountId, amount: cmd.amount },
-    metadata: cmd.metadata,
-  }]);
+  return appendToStream(stream, cmd.expectedVersion, [
+    {
+      type: 'MoneyDeposited',
+      payload: { accountId: cmd.accountId, amount: cmd.amount },
+      metadata: cmd.metadata,
+    },
+  ]);
 }
 
 export async function handleWithdraw(cmd: WithdrawCommand): Promise<CommandResult> {
@@ -56,11 +60,13 @@ export async function handleWithdraw(cmd: WithdrawCommand): Promise<CommandResul
   if (state.status === 'closed') throw new BusinessRuleError('account closed');
   if (state.balance < cmd.amount) throw new BusinessRuleError('insufficient funds');
 
-  return appendToStream(stream, cmd.expectedVersion, [{
-    type: 'MoneyWithdrawn',
-    payload: { accountId: cmd.accountId, amount: cmd.amount },
-    metadata: cmd.metadata,
-  }]);
+  return appendToStream(stream, cmd.expectedVersion, [
+    {
+      type: 'MoneyWithdrawn',
+      payload: { accountId: cmd.accountId, amount: cmd.amount },
+      metadata: cmd.metadata,
+    },
+  ]);
 }
 
 export async function handleCloseAccount(cmd: CloseAccountCommand): Promise<CommandResult> {
@@ -70,9 +76,11 @@ export async function handleCloseAccount(cmd: CloseAccountCommand): Promise<Comm
   if (!state) throw new NotFoundError(`account ${cmd.accountId} not found`);
   if (state.status === 'closed') throw new BusinessRuleError('already closed');
 
-  return appendToStream(stream, cmd.expectedVersion, [{
-    type: 'AccountClosed',
-    payload: { accountId: cmd.accountId },
-    metadata: cmd.metadata,
-  }]);
+  return appendToStream(stream, cmd.expectedVersion, [
+    {
+      type: 'AccountClosed',
+      payload: { accountId: cmd.accountId },
+      metadata: cmd.metadata,
+    },
+  ]);
 }

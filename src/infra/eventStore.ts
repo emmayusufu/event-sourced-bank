@@ -34,7 +34,7 @@ function rowToEvent(r: any): StoredEvent {
 export async function readStream(streamId: string): Promise<StoredEvent[]> {
   const { rows } = await getPool().query(
     `SELECT * FROM events WHERE stream_id = $1 ORDER BY version`,
-    [streamId]
+    [streamId],
   );
   return rows.map(rowToEvent);
 }
@@ -42,7 +42,7 @@ export async function readStream(streamId: string): Promise<StoredEvent[]> {
 export async function readAfter(seq: number, limit = 100): Promise<StoredEvent[]> {
   const { rows } = await getPool().query(
     `SELECT * FROM events WHERE global_seq > $1 ORDER BY global_seq LIMIT $2`,
-    [seq, limit]
+    [seq, limit],
   );
   return rows.map(rowToEvent);
 }
@@ -64,7 +64,7 @@ export async function appendToStream(
         `INSERT INTO events (stream_id, version, type, payload, metadata)
          VALUES ($1, $2, $3, $4, $5)
          RETURNING global_seq`,
-        [streamId, nextVersion, event.type, event.payload, event.metadata ?? {}]
+        [streamId, nextVersion, event.type, event.payload, event.metadata ?? {}],
       );
       lastGlobalSeq = Number(r.rows[0].global_seq);
       nextVersion++;
@@ -72,7 +72,7 @@ export async function appendToStream(
       if (err.code === '23505') {
         const { rows } = await getPool().query(
           `SELECT MAX(version) as v FROM events WHERE stream_id = $1`,
-          [streamId]
+          [streamId],
         );
         throw new ConcurrencyError(expectedVersion, Number(rows[0]?.v ?? 0));
       }

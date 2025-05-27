@@ -11,13 +11,14 @@ export async function runMigrations(dir = 'migrations') {
     )
   `);
 
-  const files = readdirSync(dir).filter(f => f.endsWith('.sql')).sort();
+  const files = readdirSync(dir)
+    .filter(f => f.endsWith('.sql'))
+    .sort();
 
   for (const file of files) {
-    const { rows } = await pool.query(
-      `SELECT 1 FROM schema_migrations WHERE filename = $1`,
-      [file]
-    );
+    const { rows } = await pool.query(`SELECT 1 FROM schema_migrations WHERE filename = $1`, [
+      file,
+    ]);
     if (rows.length > 0) continue;
 
     const sql = readFileSync(join(dir, file), 'utf-8');
@@ -25,14 +26,15 @@ export async function runMigrations(dir = 'migrations') {
     try {
       await client.query('BEGIN');
       await client.query(sql);
-      await client.query(
-        `INSERT INTO schema_migrations (filename) VALUES ($1)`,
-        [file]
-      );
+      await client.query(`INSERT INTO schema_migrations (filename) VALUES ($1)`, [file]);
       await client.query('COMMIT');
       console.log(`migrated: ${file}`);
     } catch (err) {
-      try { await client.query('ROLLBACK'); } catch { /* preserve original error */ }
+      try {
+        await client.query('ROLLBACK');
+      } catch {
+        /* preserve original error */
+      }
       throw err;
     } finally {
       client.release();

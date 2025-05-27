@@ -19,7 +19,11 @@ export async function withTx<T>(fn: (tx: Tx) => Promise<T>): Promise<T> {
     await client.query('COMMIT');
     return result;
   } catch (err) {
-    try { await client.query('ROLLBACK'); } catch { /* preserve original error */ }
+    try {
+      await client.query('ROLLBACK');
+    } catch {
+      /* preserve original error */
+    }
     throw err;
   } finally {
     client.release();

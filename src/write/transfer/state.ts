@@ -1,11 +1,6 @@
 import type { StoredEvent } from '../../infra/eventStore.js';
 
-export type TransferStatus =
-  | 'requested'
-  | 'debited'
-  | 'credited'
-  | 'completed'
-  | 'failed';
+export type TransferStatus = 'requested' | 'debited' | 'credited' | 'completed' | 'failed';
 
 export type TransferState = {
   id: string;
@@ -55,8 +50,5 @@ export function applyTransferEvent(
 }
 
 export function rehydrateTransfer(events: StoredEvent[]): TransferState | null {
-  return events.reduce<TransferState | null>(
-    (s, e) => applyTransferEvent(s, e),
-    null,
-  );
+  return events.reduce<TransferState | null>((s, e) => applyTransferEvent(s, e), null);
 }

@@ -63,24 +63,24 @@ the same response and a header marking it as a replay:
 
 ## Endpoints
 
-| Method | Path                                | Purpose                  |
-|--------|-------------------------------------|--------------------------|
-| POST   | /accounts                           | open                     |
-| POST   | /accounts/:id/deposits              | deposit                  |
-| POST   | /accounts/:id/withdrawals           | withdraw                 |
-| POST   | /accounts/:id/close                 | close                    |
-| POST   | /transfers                          | request transfer (202)   |
-| GET    | /accounts                           | list open accounts       |
-| GET    | /accounts/:id                       | one account              |
-| GET    | /accounts/:id/transactions          | account history          |
-| GET    | /transfers/:id                      | transfer status          |
-| GET    | /accounts/:id/ledger                | double-entry ledger      |
-| POST   | /admin/rebuild-projections          | wipe and replay          |
-| GET    | /admin/events?stream=...&after=...  | raw event log            |
-| GET    | /admin/ledger/trial-balance         | debits/credits per acct  |
-| GET    | /admin/ledger/invariants            | books-balance health     |
+| Method | Path                                  | Purpose                            |
+| ------ | ------------------------------------- | ---------------------------------- |
+| POST   | /accounts                             | open                               |
+| POST   | /accounts/:id/deposits                | deposit                            |
+| POST   | /accounts/:id/withdrawals             | withdraw                           |
+| POST   | /accounts/:id/close                   | close                              |
+| POST   | /transfers                            | request transfer (202)             |
+| GET    | /accounts                             | list open accounts                 |
+| GET    | /accounts/:id                         | one account                        |
+| GET    | /accounts/:id/transactions            | account history                    |
+| GET    | /transfers/:id                        | transfer status                    |
+| GET    | /accounts/:id/ledger                  | double-entry ledger                |
+| POST   | /admin/rebuild-projections            | wipe and replay                    |
+| GET    | /admin/events?stream=...&after=...    | raw event log                      |
+| GET    | /admin/ledger/trial-balance           | debits/credits per acct            |
+| GET    | /admin/ledger/invariants              | books-balance health               |
 | GET    | /admin/reconciliation/stuck-transfers | sagas stuck past olderThan seconds |
-| GET    | /admin/reconciliation/replay-check  | projection vs replay-from-events |
+| GET    | /admin/reconciliation/replay-check    | projection vs replay-from-events   |
 
 Append `?wait=true` to any mutation to block until the projection has caught up.
 Send `Idempotency-Key: <uuid>` on any POST to make it safe to retry.

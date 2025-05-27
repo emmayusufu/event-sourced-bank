@@ -22,10 +22,7 @@ async function getCheckpoint(tx: Tx): Promise<number> {
 }
 
 async function setCheckpoint(tx: Tx, seq: number): Promise<void> {
-  await tx.query(
-    `UPDATE projector_checkpoint SET last_seq = $1 WHERE name = 'main'`,
-    [seq],
-  );
+  await tx.query(`UPDATE projector_checkpoint SET last_seq = $1 WHERE name = 'main'`, [seq]);
 }
 
 let running = false;
@@ -78,16 +75,14 @@ export async function currentCheckpoint(): Promise<number> {
 }
 
 export async function tipSeq(): Promise<number> {
-  const { rows } = await getPool().query(
-    `SELECT COALESCE(MAX(global_seq), 0) AS s FROM events`,
-  );
+  const { rows } = await getPool().query(`SELECT COALESCE(MAX(global_seq), 0) AS s FROM events`);
   return Number(rows[0]?.s ?? 0);
 }
 
 export async function waitForCheckpoint(target: number, timeoutMs = 2000): Promise<boolean> {
   const start = Date.now();
   while (Date.now() - start < timeoutMs) {
-    if (await currentCheckpoint() >= target) return true;
+    if ((await currentCheckpoint()) >= target) return true;
     await new Promise(r => setTimeout(r, 50));
   }
   return false;

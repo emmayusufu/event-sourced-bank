@@ -7,7 +7,11 @@ import { rehydrateAccount } from '../write/account/state.js';
 import { handleDeposit, handleWithdraw } from '../write/account/handlers.js';
 import { BusinessRuleError, ConcurrencyError, NotFoundError } from '../shared/errors.js';
 
-async function appendTransferEvent(transferId: string, eventType: string, payload: Record<string, unknown>) {
+async function appendTransferEvent(
+  transferId: string,
+  eventType: string,
+  payload: Record<string, unknown>,
+) {
   const stream = transferStreamId(transferId);
   const events = await readStream(stream);
   const state = rehydrateTransfer(events);
@@ -41,9 +45,11 @@ export async function transferProcessManager(_tx: Tx, event: StoredEvent): Promi
           metadata: { transferId, transferToId: toId },
         });
       } catch (err) {
-        if (err instanceof BusinessRuleError ||
-            err instanceof NotFoundError ||
-            err instanceof ConcurrencyError) {
+        if (
+          err instanceof BusinessRuleError ||
+          err instanceof NotFoundError ||
+          err instanceof ConcurrencyError
+        ) {
           await appendTransferEvent(transferId, 'TransferFailed', {
             transferId,
             reason: err.message,
@@ -76,9 +82,11 @@ export async function transferProcessManager(_tx: Tx, event: StoredEvent): Promi
           metadata: { transferId, transferFromId: transfer.fromId },
         });
       } catch (err) {
-        if (err instanceof BusinessRuleError ||
-            err instanceof NotFoundError ||
-            err instanceof ConcurrencyError) {
+        if (
+          err instanceof BusinessRuleError ||
+          err instanceof NotFoundError ||
+          err instanceof ConcurrencyError
+        ) {
           await refund(transfer.fromId, transfer.amount, transferId);
           await appendTransferEvent(transferId, 'TransferFailed', {
             transferId,

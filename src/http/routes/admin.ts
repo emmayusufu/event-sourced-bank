@@ -19,7 +19,9 @@ adminRouter.post('/admin/rebuild-projections', async (_req, res, next) => {
     });
     const caught = await waitForCheckpoint(target, 10_000);
     res.json({ rebuilt: true, eventsReplayed: target, caughtUp: caught });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 adminRouter.get('/admin/events', async (req, res, next) => {
@@ -35,24 +37,28 @@ adminRouter.get('/admin/events', async (req, res, next) => {
     } else {
       res.json(await readAfter(after, 1000));
     }
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 adminRouter.get('/admin/ledger/invariants', async (_req, res, next) => {
   try {
     const r = await checkInvariants();
     const healthy =
-      r.globalNet === 0 &&
-      r.unbalancedGroups.length === 0 &&
-      r.reconciliation.length === 0;
+      r.globalNet === 0 && r.unbalancedGroups.length === 0 && r.reconciliation.length === 0;
     res.status(healthy ? 200 : 500).json({ healthy, ...r });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 adminRouter.get('/admin/ledger/trial-balance', async (_req, res, next) => {
   try {
     res.json(await trialBalance());
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 adminRouter.get('/admin/reconciliation/stuck-transfers', async (req, res, next) => {
@@ -68,12 +74,16 @@ adminRouter.get('/admin/reconciliation/stuck-transfers', async (req, res, next) 
       thresholdSeconds: olderThan,
       stuck,
     });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 adminRouter.get('/admin/reconciliation/replay-check', async (_req, res, next) => {
   try {
     const r = await replayCheck();
     res.status(r.healthy ? 200 : 500).json(r);
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });

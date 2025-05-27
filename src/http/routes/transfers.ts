@@ -30,7 +30,9 @@ transfersRouter.post('/transfers', async (req, res, next) => {
     });
     if (req.query.wait === 'true') await waitForCheckpoint(result.globalSeq);
     res.status(202).json({ transferId: result.transferId, status: result.status });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });
 
 transfersRouter.get('/transfers/:id', async (req, res, next) => {
@@ -47,5 +49,7 @@ transfersRouter.get('/transfers/:id', async (req, res, next) => {
       reason: state.reason,
       refunded: state.refunded,
     });
-  } catch (err) { next(err); }
+  } catch (err) {
+    next(err);
+  }
 });

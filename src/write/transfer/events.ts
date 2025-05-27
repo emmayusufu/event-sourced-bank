@@ -5,7 +5,7 @@ export type TransferRequested = {
   toId: string;
   amount: number;
 };
-export type TransferDebited  = { type: 'TransferDebited';  transferId: string };
+export type TransferDebited = { type: 'TransferDebited'; transferId: string };
 export type TransferCredited = { type: 'TransferCredited'; transferId: string };
 export type TransferCompleted = { type: 'TransferCompleted'; transferId: string };
 export type TransferFailed = {
