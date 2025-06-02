@@ -31,7 +31,38 @@ Out:
 - A second bounded context or microservices.
 - An external message bus (Kafka, RabbitMQ).
 - A separate read database. Projections live in the same Postgres.
-- Tests. Excluded by user choice; commit hygiene compensates.
+- Integration tests against a real DB. Pure-function tests cover the
+  invariants that matter most; the rest is deferred.
+
+## DDD glossary
+
+A few tactical Domain-Driven Design terms map directly to files in this
+codebase, so a reader skimming for them can find the wiring quickly.
+
+The aggregates are `AccountState` and `TransferState`, in
+`src/write/account/state.ts` and `src/write/transfer/state.ts`. Both are pure
+state with a pure transition function and no I/O. Each aggregate is its own
+transaction boundary; concurrency is enforced per stream by the
+`(stream_id, version)` unique constraint on the events table.
+
+Domain events are typed in `src/write/*/events.ts` and persisted, past-tense
+and immutable, in the `events` table. Commands sit in `src/write/*/commands.ts`
+as plain types and are validated by their handler before being turned into
+events.
+
+The repository is `src/infra/eventStore.ts`. `readStream` and `appendToStream`
+load and persist aggregates by stream; optimistic concurrency is built into
+`appendToStream`. The thin orchestration layer in `src/write/*/handlers.ts`
+plays the application-service role: load, rehydrate, validate, append.
+
+The transfer saga is a process manager in `src/process/transfer.ts`. It
+listens for events as the projector loops over them, issues new commands, and
+compensates on failure.
+
+Read models live in `src/read/projectors/*.ts` and back the
+`account_projection`, `transaction_projection`, and `ledger_entries` tables.
+There is no anti-corruption layer because there is only one bounded context
+in this service.
 
 ## Architecture
 
