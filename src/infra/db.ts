@@ -6,7 +6,13 @@ let pool: pg.Pool | null = null;
 
 export function getPool(): pg.Pool {
   if (!pool) {
-    pool = new pg.Pool({ connectionString: process.env.DATABASE_URL });
+    pool = new pg.Pool({
+      connectionString: process.env.DATABASE_URL,
+      allowExitOnIdle: true,
+    });
+    pool.on('error', err => {
+      console.error('pg pool error:', err.message);
+    });
   }
   return pool;
 }
