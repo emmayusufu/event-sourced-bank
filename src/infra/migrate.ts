@@ -2,7 +2,9 @@ import { readdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { getPool } from './db.js';
 
-export async function runMigrations(dir = 'migrations') {
+export async function runMigrations(
+  dir = `migrations/${process.env.ROLE === 'follower' ? 'follower' : 'primary'}`,
+) {
   const pool = getPool();
   await pool.query(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
