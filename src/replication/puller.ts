@@ -156,7 +156,10 @@ export function startPuller({
     }
     stopped = true;
   };
-  loop();
+  loop().catch(err => {
+    console.error('puller loop crashed:', err);
+    stopped = true;
+  });
   runHandle = {
     stop: () => {
       running = false;
