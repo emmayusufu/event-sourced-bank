@@ -6,11 +6,13 @@ import { replicationRouter } from './routes/replication.js';
 import { errorMiddleware } from './errorMiddleware.js';
 import { idempotency } from './idempotency.js';
 import { replicationHeaders } from './headersMiddleware.js';
+import { readOnlyOnFollower } from './readOnlyMiddleware.js';
 
 export function buildApp(): Express {
   const app = express();
   app.use(express.json());
   app.use(replicationHeaders);
+  app.use(readOnlyOnFollower);
   app.use(idempotency);
   app.use(accountsRouter);
   app.use(transfersRouter);
