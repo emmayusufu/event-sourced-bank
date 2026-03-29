@@ -7,12 +7,14 @@ import { transferProcessManager } from '../process/transfer.js';
 
 export type Handler = (tx: Tx, event: StoredEvent) => Promise<void>;
 
-const handlers: Handler[] = [
-  accountProjector,
-  transactionProjector,
-  ledgerProjector,
-  transferProcessManager,
-];
+function buildHandlers(): Handler[] {
+  const role = process.env.ROLE === 'follower' ? 'follower' : 'primary';
+  const base: Handler[] = [accountProjector, transactionProjector, ledgerProjector];
+  if (role === 'follower') return base;
+  return [...base, transferProcessManager];
+}
+
+const handlers: Handler[] = buildHandlers();
 
 async function getCheckpoint(tx: Tx): Promise<number> {
   const { rows } = await tx.query(
@@ -87,3 +89,5 @@ export async function waitForCheckpoint(target: number, timeoutMs = 2000): Promi
   }
   return false;
 }
+
+export const _handlersForTest = handlers;
