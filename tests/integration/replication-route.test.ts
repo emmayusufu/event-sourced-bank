@@ -29,3 +29,11 @@ describe('GET /admin/replication on primary', () => {
     expect(r.body.primaryTip).toBe(r.body.localSeq);
   });
 });
+
+describe('GET /admin/events on primary', () => {
+  it('includes X-Primary-Tip on the response', async () => {
+    const r = await request(app).get('/admin/events').expect(200);
+    expect(r.headers['x-primary-tip']).toBeDefined();
+    expect(Number(r.headers['x-primary-tip'])).toBeGreaterThanOrEqual(0);
+  });
+});
