@@ -1,5 +1,5 @@
 services:
-  db:
+  db-primary:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: bank
@@ -8,7 +8,57 @@ services:
     ports:
       - '5432:5432'
     volumes:
-      - bank-pg:/var/lib/postgresql/data
+      - bank-pg-primary:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U bank -d bank']
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
+  db-follower:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: bank
+      POSTGRES_PASSWORD: bank
+      POSTGRES_DB: bank
+    ports:
+      - '5433:5432'
+    volumes:
+      - bank-pg-follower:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U bank -d bank']
+      interval: 2s
+      timeout: 5s
+      retries: 10
+
+  app-primary:
+    build: .
+    environment:
+      ROLE: primary
+      DATABASE_URL: postgres://bank:bank@db-primary:5432/bank
+      PORT: 3000
+    depends_on:
+      db-primary:
+        condition: service_healthy
+    ports:
+      - '3000:3000'
+
+  app-follower:
+    build: .
+    environment:
+      ROLE: follower
+      DATABASE_URL: postgres://bank:bank@db-follower:5432/bank
+      PORT: 3000
+      PRIMARY_URL: http://app-primary:3000
+      REPLICATION_POLL_MS: 500
+    depends_on:
+      app-primary:
+        condition: service_started
+      db-follower:
+        condition: service_healthy
+    ports:
+      - '3001:3000'
 
 volumes:
-  bank-pg:
+  bank-pg-primary:
+  bank-pg-follower:
