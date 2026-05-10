@@ -85,6 +85,31 @@ the same response and a header marking it as a replay:
 Append `?wait=true` to any mutation to block until the projection has caught up.
 Send `Idempotency-Key: <uuid>` on any POST to make it safe to retry.
 
+## Replication
+
+`docker compose up -d` brings up a primary on `:3000` and a read-only
+follower on `:3001`. Writes only land on the primary; the follower
+pulls the event log over HTTP and projects it locally.
+
+Check status:
+
+    curl -s localhost:3001/admin/replication | jq
+
+Reads work as on the primary; headers expose lag:
+
+    curl -si localhost:3001/accounts/$A | head
+    # X-Role: follower
+    # X-Local-Seq: 6
+    # X-Primary-Tip: 6
+    # X-Replica-Lag-Events: 0
+
+Writes are rejected:
+
+    curl -si -XPOST localhost:3001/accounts \
+      -H 'content-type: application/json' \
+      -d '{"owner":"Mallory","initialDeposit":0}' | head
+    # HTTP/1.1 403 Forbidden
+
 ## Notes
 
 The events table is the source of truth. Projections are derived: drop them and
