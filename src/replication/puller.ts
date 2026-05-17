@@ -141,17 +141,23 @@ export function startPuller({
   puller.syncToLiveState();
   let running = true;
   let stopped = false;
+  let wakeStop: () => void = () => {};
+  const stopRequested = new Promise<void>(resolve => {
+    wakeStop = resolve;
+  });
+  const interruptibleSleep = (ms: number) => Promise.race([deps.sleep(ms), stopRequested]);
   const loop = async () => {
     let backoff = 500;
     while (running) {
       await puller.tickOnce();
+      if (!running) break;
       const state = puller.getState();
       if (state.lastError) {
-        await deps.sleep(backoff);
+        await interruptibleSleep(backoff);
         backoff = Math.min(backoff * 2, 5000);
       } else {
         backoff = 500;
-        await deps.sleep(pollMs);
+        await interruptibleSleep(pollMs);
       }
     }
     stopped = true;
@@ -163,11 +169,13 @@ export function startPuller({
   runHandle = {
     stop: () => {
       running = false;
+      wakeStop();
     },
   };
   return {
     async stop() {
       running = false;
+      wakeStop();
       while (!stopped) await new Promise(r => setTimeout(r, 25));
       liveState = null;
       runHandle = null;

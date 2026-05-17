@@ -28,6 +28,7 @@ adminRouter.get('/admin/events', async (req, res, next) => {
   try {
     const stream = req.query.stream as string | undefined;
     const after = Number(req.query.after ?? 0);
+    const limit = Number(req.query.limit ?? 1000);
     if (stream) {
       const { rows } = await getPool().query(
         `SELECT * FROM events WHERE stream_id = $1 ORDER BY version`,
@@ -35,7 +36,7 @@ adminRouter.get('/admin/events', async (req, res, next) => {
       );
       res.json(rows);
     } else {
-      res.json(await readAfter(after, 1000));
+      res.json(await readAfter(after, limit));
     }
   } catch (err) {
     next(err);
